@@ -1,0 +1,35 @@
+# Plex Media Server with PlexPass
+# This file sets up Plex Media Server with PlexPass features using linuxserver/plex Docker image.
+services:
+  plex:
+    image: linuxserver/plex:latest # Use the latest stable Plex image
+    container_name: plexpass
+    environment:
+      PUID: 1000 # Set to match your user ID
+      PGID: 1000 # Set to match your group ID
+      TZ: Europe/Bucharest # Set your timezone
+      VERSION: docker
+      PLEX_CLAIM: ${PLEX_CLAIM} #optional
+    volumes:
+      - /mnt/tank/Apps/plex/config:/config # Configuration data (Plex metadata, settings)
+      - /mnt/tank/Apps/plex/tvshows:/tv # Directory for TV shows
+      - /mnt/tank/Apps/plex/movies:/movies # Directory for movies
+      - /mnt/tank/Apps/plex/music:/music # Directory for music
+      - /mnt/tank/Apps/plex/transcode:/transcode # Directory for temporary transcoding
+    ports:
+      - 32400:32400 # Main Plex web interface
+      - 32469:32469 # DLNA service
+      - 1900:1900/udp # DLNA service discovery
+      - 3005:3005 # Plex clients
+      - 5353:5353/udp # Bonjour/Avahi
+      - 8324:8324 # Plex companion
+      - 32410:32410/udp # GDM network discovery
+      - 32412:32412/udp # GDM network discovery
+      - 32413:32413/udp # GDM network discovery
+      - 32414:32414/udp # GDM network discovery
+      - 32443:32443 # HTTPS connection
+      - 32400:32400/udp # Plex web interface discovery
+    restart: unless-stopped # Automatically restart the container unless stopped manually
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}

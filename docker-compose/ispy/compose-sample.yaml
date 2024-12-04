@@ -1,0 +1,50 @@
+# iSpy Agent DVR multi-arch image
+# This Docker Compose configuration sets up the iSpy Agent DVR.
+# Official Docker Hub page: https://hub.docker.com/r/mekayelanik/ispyagentdvr
+
+services:
+  ispy:
+    # Use the latest version of the iSpy Agent DVR Docker image
+    image: mekayelanik/ispyagentdvr:latest
+    
+    # Name the container "ispy" for easy identification
+    container_name: ispy
+    
+    environment:
+      # Set the user ID (PUID) for permissions, matching the host system user
+      PUID: 1000
+      
+      # Set the group ID (PGID) for permissions, matching the host system group
+      PGID: 1000
+      
+      # Define the port for the Agent DVR WebUI (internal to the container)
+      AGENTDVR_WEBUI_PORT: 8090
+
+      # Set the timezone for logs and internal operations
+      TZ: Europe/Bucharest
+
+    volumes:
+      # Mount the configuration directory from the host to the container
+      - /mnt/tank/Apps/ispy/config:/AgentDVR/Media/XML
+      
+      # Mount the recordings directory from the host to the container for video storage
+      - /mnt/tank/Apps/ispy/recordings:/AgentDVR/Media/WebServerRoot/Media
+      
+      # Mount the commands directory from the host to the container
+      - /mnt/tank/Apps/ispy/commands:/AgentDVR/Commands
+
+    ports:
+      # Map port 10184 on the host to port 8090 in the container (WebUI access)
+      - 10184:8090
+      
+      # Map port 3478 for STUN protocol (used for WebRTC connectivity)
+      - 3478:3478/udp
+      
+      # Map a range of UDP ports for WebRTC media streaming
+      - 50000-50100:50000-50100/udp
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}

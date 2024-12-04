@@ -1,86 +1,41 @@
-# Nextcloud Docker Compose Configuration
-# This setup includes Nextcloud for file sharing and collaboration, 
-# along with MariaDB for the database and Redis for caching.
-# Official Nextcloud Docker documentation: https://hub.docker.com/_/nextcloud
-
 services:
   nextcloud:
-    # Use the latest version of the Nextcloud Docker image
     image: nextcloud:latest
-
-    # Name the container "nextcloud" for easy identification
     container_name: nextcloud
-
     ports:
-      # Map port 8080 on the host to port 80 in the container for accessing the web interface
       - 8080:80
-
     volumes:
-      # Mount the Nextcloud data directory from the host to the container
-      # This is where Nextcloud stores its application files and user data
       - ./nextcloud:/var/www/html
-
     environment:
-      # Database connection settings
       MYSQL_HOST: db
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-      # Trusted domains for Nextcloud
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
-
-      # Admin credentials for the initial setup (replace with secure values)
       NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
-
     depends_on:
-      # Ensure the database service starts before Nextcloud
       - db
-
-    # Restart the container automatically unless it is explicitly stopped
     restart: unless-stopped
 
   db:
-    # Use the latest version of the MariaDB Docker image for the database
     image: mariadb:latest
-
-    # Name the container "nextcloud_db" for easy identification
     container_name: nextcloud_db
-
     environment:
-      # Root password for the database
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-
-      # Database name and user credentials for Nextcloud
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
     volumes:
-      # Mount the database directory from the host to the container
-      # This is where MariaDB stores its data
       - ./db:/var/lib/mysql
-
-    # Restart the container automatically unless it is explicitly stopped
     restart: unless-stopped
 
   redis:
-    # Use a lightweight Redis image for caching
     image: redis:alpine
-
-    # Name the container "nextcloud_redis" for easy identification
     container_name: nextcloud_redis
-
     command: redis-server --appendonly yes
-
     volumes:
-      # Mount the Redis data directory from the host to the container
-      # This ensures persistent data storage for Redis
       - ./redis:/data
-
-    # Restart the container automatically unless it is explicitly stopped
     restart: unless-stopped
 
-# Define networks (empty in this case, using the default Docker network)
 networks: {}

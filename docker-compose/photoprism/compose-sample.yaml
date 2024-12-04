@@ -1,0 +1,99 @@
+# PhotoPrism Docker Compose Configuration
+# This setup includes PhotoPrism for photo management and MariaDB for the database.
+# Official PhotoPrism documentation: https://docs.photoprism.app
+# MariaDB is configured as the backend database for storing metadata.
+
+services:
+  photoprism:
+    # Use the latest version of the PhotoPrism Docker image
+    image: photoprism/photoprism:latest
+
+    # Name the container "photoprism" for easy identification
+    container_name: photoprism
+
+    environment:
+      # Set the user ID (UID) for permissions, matching the host system user
+      PHOTOPRISM_UID: 1000
+      
+      # Set the group ID (GID) for permissions, matching the host system group
+      PHOTOPRISM_GID: 1000
+
+      # Set the timezone for logs and internal operations
+      PHOTOPRISM_TIMEZONE: Europe/Bucharest
+
+      # Configure the database driver to use MariaDB
+      PHOTOPRISM_DATABASE_DRIVER: mysql
+
+      # Provide the Data Source Name (DSN) for the database connection
+      # Replace `${MYSQL_PASSWORD}` with the actual password set in the MariaDB service
+      PHOTOPRISM_DATABASE_DSN: photoprism:${MYSQL_PASSWORD}@tcp(mariadb:3306)/photoprism
+
+      # Limit the number of files in the originals directory scanned per session (optional)
+      PHOTOPRISM_ORIGINALS_LIMIT: 5000
+
+      # Enable HTTP compression for faster web transfers
+      PHOTOPRISM_HTTP_COMPRESSION: true
+
+      # Limit the number of concurrent workers for indexing and processing tasks
+      PHOTOPRISM_WORKERS: 2
+
+      # Specify the public URL for accessing the PhotoPrism instance
+      PHOTOPRISM_SITE_URL: ${PHOTOPRISM_SITE_URL}
+
+      # Set to `true` to make the PhotoPrism instance public (no authentication required)
+      PHOTOPRISM_PUBLIC: false
+
+    volumes:
+      # Mount the storage directory from the host to the container
+      # This is used for storing the index, thumbnails, and other cached data
+      - ./storage:/photoprism/storage
+
+      # Mount the import directory from the host to the container
+      # New photos can be added here for import into PhotoPrism
+      - ./import:/photoprism/import
+
+      # Mount the originals directory from the host to the container
+      # Original photos are stored here and will be indexed by PhotoPrism
+      - ./originals:/photoprism/originals
+
+    ports:
+      # Map port 2342 on the host to port 2342 in the container for accessing the web interface
+      - 2342:2342
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+  mariadb:
+    # Use MariaDB version 10.6, which is stable and supported
+    image: mariadb:10.6
+
+    # Name the container "photoprism-db" for easy identification
+    container_name: photoprism_db
+
+    environment:
+      # Set the root password for MariaDB
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      # Set the name of the database to be created
+      MYSQL_DATABASE: photoprism
+
+      # Set the username for the PhotoPrism database user
+      MYSQL_USER: photoprism
+
+      # Set the password for the PhotoPrism database user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      # Mount the database directory from the host to the container
+      # This is where MariaDB will store its data
+      - ./database:/var/lib/mysql
+
+    ports:
+      # Map port 3306 on the host to port 3306 in the container for database access
+      - 3306:3306
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}
