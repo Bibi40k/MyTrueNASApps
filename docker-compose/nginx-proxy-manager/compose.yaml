@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
 
     environment:
-      # Set the root password for MariaDB (replace `${MYSQL_ROOT_PASSWORD}` with a secure password)
+      # Set the root password for MariaDB
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
       # Database name and user credentials for Nginx Proxy Manager

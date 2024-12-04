@@ -27,7 +27,7 @@ services:
       MYSQL_USER: nextcloud
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
-      # Trusted domains for Nextcloud (replace `${NEXTCLOUD_TRUSTED_DOMAINS}` with actual values)
+      # Trusted domains for Nextcloud
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
 
       # Admin credentials for the initial setup (replace with secure values)
@@ -49,7 +49,7 @@ services:
     container_name: nextcloud_db
 
     environment:
-      # Root password for the database (replace `${MYSQL_ROOT_PASSWORD}` with a secure password)
+      # Root password for the database
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
       # Database name and user credentials for Nextcloud
