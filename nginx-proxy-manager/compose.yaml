@@ -1,0 +1,63 @@
+# Nginx Proxy Manager Docker Compose Configuration
+# This setup includes Nginx Proxy Manager (NPM) for managing reverse proxies and SSL certificates,
+# and MariaDB as the database backend for NPM.
+
+services:
+  app:
+    # Use the latest Nginx Proxy Manager Docker image
+    image: jc21/nginx-proxy-manager:latest
+
+    # Name the container "nginx-proxy-manager" for easy identification
+    container_name: nginx-proxy-manager
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+    ports:
+      # Map port 80 on the host to port 80 in the container for HTTP traffic
+      - 80:80 # HTTP
+      # Map port 81 on the host to port 82 in the container for accessing the NPM management UI
+      - 82:81 # Management UI
+      # Map port 443 on the host to port 443 in the container for HTTPS traffic
+      - 443:443 # HTTPS
+
+    environment:
+      # Database connection details for MariaDB
+      DB_MYSQL_HOST: db
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: npm
+      DB_MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      DB_MYSQL_NAME: npm
+
+    volumes:
+      # Mount the data directory from the host to the container for persistent storage of NPM configuration
+      - ./data:/data
+      # Mount the Let's Encrypt directory from the host to the container for SSL certificates
+      - ./letsencrypt:/etc/letsencrypt
+
+  db:
+    # Use the latest MariaDB Docker image for the database
+    image: mariadb:latest
+
+    # Name the container "nginx-proxy-manager-db" for easy identification
+    container_name: nginx-proxy-manager_db
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+    environment:
+      # Set the root password for MariaDB (replace `${MYSQL_ROOT_PASSWORD}` with a secure password)
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      # Database name and user credentials for Nginx Proxy Manager
+      MYSQL_DATABASE: npm
+      MYSQL_USER: npm
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      # Mount the database directory from the host to the container
+      # This is where MariaDB stores its data
+      - ./db:/var/lib/mysql
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}
