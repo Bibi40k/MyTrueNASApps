@@ -11,85 +11,139 @@ services:
     # Name the container "photoprism" for easy identification
     container_name: photoprism
 
+    # Configure the container's environment variables
     environment:
       # Set the user ID (UID) for permissions, matching the host system user
-      PHOTOPRISM_UID: 1000
+      PHOTOPRISM_UID: 568 # apps
       
       # Set the group ID (GID) for permissions, matching the host system group
-      PHOTOPRISM_GID: 1000
-
-      # Set the timezone for logs and internal operations
-      PHOTOPRISM_TIMEZONE: Europe/Bucharest
-
-      # Configure the database driver to use MariaDB
-      PHOTOPRISM_DATABASE_DRIVER: mysql
-
-      # Provide the Data Source Name (DSN) for the database connection
-      # Replace `${MYSQL_PASSWORD}` with the actual password set in the MariaDB service
-      PHOTOPRISM_DATABASE_DSN: photoprism:${MYSQL_PASSWORD}@tcp(mariadb:3306)/photoprism
-
+      PHOTOPRISM_GID: 568 # apps
+      
+      # Set the file permissions mask (0022 = 755 for directories)
+      PHOTOPRISM_UMASK: 0022 # 0022 = 755
+      
+      # Set the admin username for accessing PhotoPrism
+      PHOTOPRISM_ADMIN_USER: "${PHOTOPRISM_ADMIN_USER}"
+      
+      # Set the admin password for accessing PhotoPrism
+      PHOTOPRISM_ADMIN_PASSWORD: "${PHOTOPRISM_ADMIN_PASSWORD}"
+      
+      # Specify the public URL for accessing the PhotoPrism instance
+      PHOTOPRISM_SITE_URL: "${PHOTOPRISM_SITE_URL}"
+      
       # Limit the number of files in the originals directory scanned per session (optional)
       PHOTOPRISM_ORIGINALS_LIMIT: 5000
-
+      
       # Enable HTTP compression for faster web transfers
-      PHOTOPRISM_HTTP_COMPRESSION: true
+      PHOTOPRISM_HTTP_COMPRESSION: "gzip"
+      
+      # Set the log verbosity level (trace, debug, info, warning, error, fatal, panic)
+      PHOTOPRISM_LOG_LEVEL: "info"
+      
+      # Enable or disable read-only mode (false allows modifications)
+      PHOTOPRISM_READONLY: "false"
+      
+      # Enable experimental features (set to "true" to use them)
+      PHOTOPRISM_EXPERIMENTAL: "false"
+      
+      # Disable the built-in WebDAV server (set to "true" to disable it)
+      PHOTOPRISM_DISABLE_WEBDAV: "false"
+      
+      # Disable the settings UI and API (set to "true" to disable them)
+      PHOTOPRISM_DISABLE_SETTINGS: "false"
+      
+      # Configure TensorFlow, face detection, and classification features
+      PHOTOPRISM_DISABLE_TENSORFLOW: "false"
+      PHOTOPRISM_DISABLE_FACES: "false"
+      PHOTOPRISM_DISABLE_CLASSIFICATION: "false"
+      PHOTOPRISM_DISABLE_VECTORS: "false"
+      PHOTOPRISM_DISABLE_RAW: "false"
+      
+      # Enable YAML sidecar files for metadata
+      PHOTOPRISM_SIDECAR_YAML: "true"
+      
+      # Configure backup settings for albums and the database
+      PHOTOPRISM_BACKUP_ALBUMS: "true"
+      PHOTOPRISM_BACKUP_DATABASE: "true"
+      PHOTOPRISM_BACKUP_SCHEDULE: "daily"
+      
+      # Configure indexing and auto-import settings
+      PHOTOPRISM_INDEX_SCHEDULE: ""
+      PHOTOPRISM_AUTO_INDEX: 300
+      PHOTOPRISM_AUTO_IMPORT: -1
+      
+      # Enable or disable NSFW detection and uploading
+      PHOTOPRISM_DETECT_NSFW: "false"
+      PHOTOPRISM_UPLOAD_NSFW: "true"
+      
+      # Configure the database connection settings
+      PHOTOPRISM_DATABASE_DRIVER: "mysql"
+      PHOTOPRISM_DATABASE_SERVER: "db:3306"
+      PHOTOPRISM_DATABASE_NAME: "photoprism"
+      PHOTOPRISM_DATABASE_USER: "photoprism"
+      PHOTOPRISM_DATABASE_PASSWORD: "${MYSQL_PASSWORD}"
+      
+      # Set site-specific properties
+      PHOTOPRISM_SITE_CAPTION: "PhotoPrism"
+      PHOTOPRISM_SITE_AUTHOR: "Photographer"
+      
+      # Configure the HTTP server
+      PHOTOPRISM_HTTP_HOST: "0.0.0.0"
+      PHOTOPRISM_HTTP_PORT: 2342
+      PHOTOPRISM_SETTINGS_HIDDEN: "false"
+      PHOTOPRISM_PUBLIC: "false"
+      
+      # Set paths for originals, imports, and storage
+      PHOTOPRISM_ORIGINALS_PATH: "/photoprism/originals"
+      PHOTOPRISM_IMPORT_PATH: "/photoprism/import"
+      PHOTOPRISM_STORAGE_PATH: "/photoprism/storage"
 
-      # Limit the number of concurrent workers for indexing and processing tasks
-      PHOTOPRISM_WORKERS: 2
-
-      # Specify the public URL for accessing the PhotoPrism instance
-      PHOTOPRISM_SITE_URL: ${PHOTOPRISM_SITE_URL}
-
-      # Set to `true` to make the PhotoPrism instance public (no authentication required)
-      PHOTOPRISM_PUBLIC: false
-
+    # Define volumes for persistent storage
     volumes:
-      # Mount the storage directory from the host to the container
-      # This is used for storing the index, thumbnails, and other cached data
-      - ./storage:/photoprism/storage
+      # Storage directory for caching and metadata
+      - /mnt/tank/Apps_Data/photoprism/App_Storage:/photoprism/storage
+      
+      # Directory for importing photos
+      - /mnt/tank/Apps_Data/photoprism/App_Import:/photoprism/import
+      
+      # Originals directory for storing indexed photos
+      - /mnt/tank/Apps_Data/photoprism/App_Originals:/photoprism/originals
 
-      # Mount the import directory from the host to the container
-      # New photos can be added here for import into PhotoPrism
-      - ./import:/photoprism/import
-
-      # Mount the originals directory from the host to the container
-      # Original photos are stored here and will be indexed by PhotoPrism
-      - ./originals:/photoprism/originals
-
+    # Map port 2342 on the host to port 2342 in the container for accessing the web interface
     ports:
-      # Map port 2342 on the host to port 2342 in the container for accessing the web interface
       - 2342:2342
 
     # Restart the container automatically unless it is explicitly stopped
     restart: unless-stopped
 
-  mariadb:
+  db:
     # Use MariaDB version 10.6, which is stable and supported
     image: mariadb:10.6
 
-    # Name the container "photoprism-db" for easy identification
+    # Name the container "photoprism_db" for easy identification
     container_name: photoprism_db
 
+    # Configure the database environment variables
     environment:
       # Set the root password for MariaDB
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      
       # Set the name of the database to be created
-      MYSQL_DATABASE: photoprism
-
+      MYSQL_DATABASE: "photoprism"
+      
       # Set the username for the PhotoPrism database user
-      MYSQL_USER: photoprism
-
+      MYSQL_USER: "photoprism"
+      
       # Set the password for the PhotoPrism database user
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
 
+    # Define volumes for persistent database storage
     volumes:
       # Mount the database directory from the host to the container
-      # This is where MariaDB will store its data
-      - ./database:/var/lib/mysql
+      - /mnt/tank/Apps_Data/photoprism/App_Database:/var/lib/mysql
 
+    # Map port 3306 on the host to port 3306 in the container for database access
     ports:
-      # Map port 3306 on the host to port 3306 in the container for database access
       - 3306:3306
 
     # Restart the container automatically unless it is explicitly stopped
