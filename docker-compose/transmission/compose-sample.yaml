@@ -1,0 +1,76 @@
+# Transmission Docker Compose Configuration
+# This setup uses the LinuxServer Transmission image for torrent management.
+# It includes support for blocklists, configurable directories, and RPC access.
+# Official Docker Hub page: https://hub.docker.com/r/linuxserver/transmission
+
+services:
+  transmission:
+    # Use the official Transmission Docker image from LinuxServer
+    image: lscr.io/linuxserver/transmission:latest
+
+    # Name the container "transmission" for easy identification
+    container_name: transmission
+
+    # Define environment variables for configuring Transmission
+    environment:
+      # Set the user ID (UID) for permissions, matching the host system user
+      PUID: 568 # apps user
+      
+      # Set the group ID (GID) for permissions, matching the host system group
+      PGID: 568 # apps group
+      
+      # Set the file permissions mask (0022 = 755 for directories, 644 for files)
+      UMASK: "0022" # 0022 = 755
+      
+      # Set the timezone for correct time handling in logs
+      TZ: Europe/Bucharest # Adjust to your local timezone
+      
+      # Enable or disable RPC authentication (false allows open access)
+      TRANSMISSION_RPC_AUTHENTICATION_REQUIRED: "false" # Disable authentication for RPC
+      
+      # Uncomment the following lines to set custom RPC username and password
+      # TRANSMISSION_RPC_USERNAME: "${TRANSMISSION_RPC_USERNAME}" # RPC username
+      # TRANSMISSION_RPC_PASSWORD: "${TRANSMISSION_RPC_PASSWORD}" # RPC password
+      
+      # Define the RPC whitelist to restrict access to certain IPs or networks
+      TRANSMISSION_RPC_WHITELIST: "127.0.0.1,192.168.*.*" # Allow access from localhost and the 192.168.*.* network
+      
+      # Specify the peer port for incoming connections
+      TRANSMISSION_PEER_PORT: 51413 # Default peer-to-peer port for torrenting
+      
+      # Enable or disable downloading incomplete torrents to a separate directory
+      TRANSMISSION_INCOMPLETE_DIR_ENABLED: "false" # Disable separate directory for incomplete torrents
+      
+      # Specify the directory for incomplete torrents (used only if enabled above)
+      TRANSMISSION_INCOMPLETE_DIR: "/downloads/incomplete" # Path for incomplete downloads
+      
+      # Enable the blocklist feature to block known malicious peers
+      TRANSMISSION_BLOCKLIST_ENABLED: "true" # Enable blocklist
+      
+      # Provide the URL for the blocklist file (automatically downloaded by Transmission)
+      TRANSMISSION_BLOCKLIST_URL: "https://github.com/Naunter/BT_BlockLists/raw/master/bt_blocklists.gz" # Blocklist URL
+
+    # Define volumes for persistent storage and file organization
+    volumes:
+      # Mount the configuration directory for Transmission
+      - /mnt/tank/Apps_Data/transmission/App_Config:/config # Persistent configuration storage
+      
+      # Custom volumes for specific directories
+      - /mnt/tank/Media/Movies:/mnt/Movies # Directory for Movies
+      - /mnt/tank/Media/Music:/mnt/Music # Directory for Music
+      - /mnt/tank/Media/TV Shows:/mnt/TV Shows # Directory for TV Shows
+
+    # Map ports for accessing Transmission and peer communication
+    ports:
+      # Web interface port
+      - 9091:9091 # Map port 9091 on the host to port 9091 in the container
+      
+      # Peer port for incoming connections
+      - 51413:51413 # TCP port for peer-to-peer communication
+      - 51413:51413/udp # UDP port for peer-to-peer communication
+      
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}

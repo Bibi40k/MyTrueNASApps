@@ -5,8 +5,8 @@ services:
     image: linuxserver/plex:latest # Use the latest stable Plex image
     container_name: plexpass
     environment:
-      PUID: 1000 # Set to match your user ID
-      PGID: 1000 # Set to match your group ID
+      PUID: 568 # Set to match your user ID
+      PGID: 568 # Set to match your group ID
       TZ: Europe/Bucharest # Set your timezone
       VERSION: docker
       PLEX_CLAIM: ${PLEX_CLAIM} #optional
