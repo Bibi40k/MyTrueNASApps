@@ -1,2 +1,6 @@
 .env
-compose.yaml
+
+# Ignore all .yaml files
+*.yaml
+# Exception: do not ignore compose-sample.yaml
+!compose-sample.yaml
