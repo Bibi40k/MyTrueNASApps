@@ -1,0 +1,63 @@
+# WG-Easy Docker Compose Configuration
+# This setup uses WG-Easy to manage WireGuard with a simple web interface.
+# Official GitHub page: https://github.com/wg-easy/wg-easy
+# Volumes are used for persistent storage of WireGuard configuration.
+
+services:
+  wg-easy:
+    # Use the official WG-Easy Docker image
+    image: ghcr.io/wg-easy/wg-easy
+
+    # Name the container "wg-easy" for easy identification
+    container_name: wg-easy
+
+    # Define environment variables for configuring WG-Easy
+    environment:
+      LANG: "en" # Set the language for the WG-Easy UI
+      WG_HOST: "${WG_HOST}" # Public IP or domain for the WireGuard server
+      PASSWORD_HASH: "${PASSWORD_HASH}" # Hashed admin password for accessing the WG-Easy UI
+      PORT: 51821 # Port for accessing the WG-Easy web interface
+      WG_PORT: 51820 # Port for WireGuard UDP connections
+      WG_CONFIG_PORT: 92820 # Internal port for managing WG configuration (used by WG-Easy)
+      WG_DEFAULT_ADDRESS: "10.8.1.x" # Default subnet for WireGuard clients
+      WG_DEFAULT_DNS: "${WG_DEFAULT_DNS}" # DNS server for WireGuard clients (e.g., 1.1.1.1)
+      WG_MTU: 1420 # Maximum Transmission Unit (MTU) for WireGuard connections
+      WG_ALLOWED_IPS: "${WG_ALLOWED_IPS}" # Allowed IPs for routing through the VPN (e.g., 0.0.0.0/0 for all traffic)
+      WG_PERSISTENT_KEEPALIVE: 25 # Interval in seconds for keep-alive packets
+      WG_PRE_UP: echo "Pre Up" > /etc/wireguard/pre-up.txt # Command to run before the WireGuard interface is brought up
+      WG_POST_UP: echo "Post Up" > /etc/wireguard/post-up.txt # Command to run after the WireGuard interface is brought up
+      WG_PRE_DOWN: echo "Pre Down" > /etc/wireguard/pre-down.txt # Command to run before the WireGuard interface is brought down
+      WG_POST_DOWN: echo "Post Down" > /etc/wireguard/post-down.txt # Command to run after the WireGuard interface is brought down
+      UI_TRAFFIC_STATS: true # Enable traffic statistics in the web UI
+      UI_CHART_TYPE: 2 # Set the chart type for traffic stats (e.g., 1 for basic, 2 for advanced)
+      WG_ENABLE_ONE_TIME_LINKS: true # Enable one-time configuration links for clients
+      UI_ENABLE_SORT_CLIENTS: true # Enable client sorting in the UI
+      WG_ENABLE_EXPIRES_TIME: true # Enable expiration times for client configurations
+      ENABLE_PROMETHEUS_METRICS: false # Enable Prometheus metrics for monitoring
+      # PROMETHEUS_METRICS_PASSWORD: ${PROMETHEUS_METRICS_PASSWORD} # Password for accessing Prometheus metrics (uncomment if needed)
+
+    # Define volumes for persistent storage
+    volumes:
+      # Mount the configuration directory for WireGuard
+      - /mnt/tank/Apps_Data/wg-easy/App_Config:/etc/wireguard
+
+    # Map ports for accessing WG-Easy and WireGuard
+    ports:
+      - "51820:51820/udp" # WireGuard UDP port for VPN connections
+      - "51821:51821/tcp" # WG-Easy web interface port
+
+    # Configure the container's capabilities (required for WireGuard)
+    cap_add:
+      - NET_ADMIN # Required for managing network interfaces
+      - SYS_MODULE # Required for managing kernel modules
+
+    # Configure system control parameters
+    sysctls:
+      - net.ipv4.ip_forward=1 # Enable IP forwarding
+      - net.ipv4.conf.all.src_valid_mark=1 # Ensure valid source marking for IP packets
+
+    # Restart the container automatically unless it is explicitly stopped
+    restart: unless-stopped
+
+# Define networks (empty in this case, using the default Docker network)
+networks: {}
